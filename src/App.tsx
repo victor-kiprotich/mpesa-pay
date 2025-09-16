@@ -1,5 +1,6 @@
 import React, { useState, ChangeEvent, FormEvent } from "react";
-import "./index.css"; // Import styles
+import axios from "axios";
+import "./index.css";
 
 interface FormData {
   phone: string;
@@ -20,15 +21,28 @@ const App: React.FC = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setStatus("Processing payment...");
 
-    setTimeout(() => {
-      setStatus(
-        `Payment of KES ${formData.amount} to Till/Paybill ${formData.till} initiated for ${formData.phone}`
+    try {
+      const response = await axios.post(
+        "https://mpesa-pay-backend.onrender.com/api/payment/initiate",
+        {
+          phone: formData.phone,
+          amount: formData.amount,
+          till: formData.till,
+        }
       );
-    }, 1500);
+
+      setStatus(
+        `Payment initiated! CheckoutRequestID: ${response.data.response.CheckoutRequestID}`
+      );
+    } catch (error: any) {
+      setStatus(
+        `Payment failed: ${error.response?.data?.message || error.message}`
+      );
+    }
   };
 
   return (
